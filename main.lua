@@ -17,6 +17,7 @@ score02 = 0
 
 function love.load()
 
+    love.window.setTitle("Ping Pong - LucasPaulo001")
     love.window.setMode(800, 600, { resizable = false, vsync = true })
 
     Player1 = Player:new(50, 250, 100, 20, 350)
