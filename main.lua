@@ -8,6 +8,8 @@ local speedIncrement = 1.2
 local message = ""
 local timeToNextLv = 10
 local showMessage = false
+local gameOver = false
+winner = ""
 
 score01 = 0
 score02 = 0
@@ -24,11 +26,13 @@ end
 
 function love.update(dt)
 
-    Player1:move("w", "s", dt)
-    Player2:move("up", "down", dt)
-    ball:move(dt, Player1, Player2)
+    if(gameOver == false) then
+        Player1:move("w", "s", dt)
+        Player2:move("up", "down", dt)
+        ball:move(dt, Player1, Player2)  
 
-    timeDifficulty = timeDifficulty + dt
+        timeDifficulty = timeDifficulty + dt
+    end
 
     -- Mensagem para alertar do próximo nível
     if timeDifficulty >= timeToNextLv - 5 and not showMessage then
@@ -48,6 +52,29 @@ function love.update(dt)
         showMessage = false
     end
 
+    if not gameOver then
+        if score01 == 3 then
+            winner = "Player 1 venceu!!\nPressione SPACE para reiniciar"
+            gameOver = true
+        elseif score02 == 3 then
+            winner = "Player 2 venceu!!\nPressione SPACE para reiniciar"
+            gameOver = true
+        end
+    end
+end
+
+function love.keypressed(key) 
+    if key == "space" and gameOver then
+        gameOver = false
+        timeDifficulty = 0
+        levelDifficulty = 1
+        timeToNextLv = 10
+        score01 = 0
+        score02 = 0
+        winner = ""
+        ball.speedX = 200
+        ball.speedY = 200
+    end
 end
 
 function love.draw()
@@ -63,4 +90,7 @@ function love.draw()
     love.graphics.setFont(love.graphics.newFont(40))
     love.graphics.print(score01, 300, 50)
     love.graphics.print(score02, 500, 50)
+
+    love.graphics.setFont(love.graphics.newFont(30))
+    love.graphics.printf(winner, 0, 250, love.graphics.getWidth(), "center")
 end
