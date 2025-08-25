@@ -11,60 +11,92 @@ local showMessage = false
 local gameOver = false
 winner = ""
 
+--Estados de tela
+local currentState = "menu"
+
+--Menu
+text = ""
+
 score01 = 0
 score02 = 0
 
 
 function love.load()
-
     love.window.setTitle("Ping Pong - LucasPaulo001")
     love.window.setMode(800, 600, { resizable = false, vsync = true })
 
+    bgImage = love.graphics.newImage("assets/images/bg.png")
+
+    --bg para game
+    backgroundsGame = {
+        love.graphics.newImage("assets/images/bgGame01.jpg"),
+        love.graphics.newImage("assets/images/bgGame02.jpg"),
+        love.graphics.newImage("assets/images/bgGame03.png")
+    }
+
+    currentBg = 1
+    
     Player1 = Player:new(50, 250, 100, 20, 350)
     Player2 = Player:new(730, 250, 100, 20, 350)
     ball = Ball:new(400, 300, 10, 200, 200)
 end
 
 function love.update(dt)
+    -- Retomando jogo após o reinicio
 
-    if(gameOver == false) then
-        Player1:move("w", "s", dt)
-        Player2:move("up", "down", dt)
-        ball:move(dt, Player1, Player2)  
+    --Quando estiver no menu
+    if currentState == "menu" then
+        text = "Menu principal\n\nPressione ENTER para iniciar"
 
-        timeDifficulty = timeDifficulty + dt
-    end
 
-    -- Mensagem para alertar do próximo nível
-    if timeDifficulty >= timeToNextLv - 5 and not showMessage then
-        message = "Preparesse para o próximo nível de velocidade!"
-        showMessage = true
-    end
+        --Quando estiver no jogo
+    elseif currentState == "game" then
+        if (gameOver == false) then
+            Player1:move("w", "s", dt)
+            Player2:move("up", "down", dt)
+            ball:move(dt, Player1, Player2)
 
-    -- Controlando velocidade com o aumento dos níveis
-    if timeDifficulty >= timeToNextLv then
-        ball.speedX = ball.speedX * speedIncrement
-        Player1.speed = Player1.speed * speedIncrement
-        Player2.speed = Player2.speed * speedIncrement
-        ball.speedY = ball.speedY * speedIncrement
-        levelDifficulty = levelDifficulty + 1
-        message = "Velocidade aumentada Nível: ".. levelDifficulty
-        timeToNextLv = timeToNextLv + 15
-        showMessage = false
-    end
+            timeDifficulty = timeDifficulty + dt
+        end
 
-    if not gameOver then
-        if score01 == 3 then
-            winner = "Player 1 venceu!!\nPressione SPACE para reiniciar"
-            gameOver = true
-        elseif score02 == 3 then
-            winner = "Player 2 venceu!!\nPressione SPACE para reiniciar"
-            gameOver = true
+        -- Mensagem para alertar do próximo nível
+        if timeDifficulty >= timeToNextLv - 5 and not showMessage then
+            message = "Preparesse para o próximo nível de velocidade!"
+            showMessage = true
+        end
+
+        -- Controlando velocidade com o aumento dos níveis
+        if timeDifficulty >= timeToNextLv then
+            ball.speedX = ball.speedX * speedIncrement
+            Player1.speed = Player1.speed * speedIncrement
+            Player2.speed = Player2.speed * speedIncrement
+            ball.speedY = ball.speedY * speedIncrement
+            levelDifficulty = levelDifficulty + 1
+
+            currentBg = currentBg + 1
+            if currentBg > #backgroundsGame then
+                currentBg = 1
+            end
+            message = "Velocidade aumentada Nível: " .. levelDifficulty
+            timeToNextLv = timeToNextLv + 15
+            showMessage = false
+        end
+
+        --GamiOver
+        if not gameOver then
+            if score01 == 3 then
+                winner = "Player 1 venceu!!\nPressione SPACE para reiniciar"
+                gameOver = true
+            elseif score02 == 3 then
+                winner = "Player 2 venceu!!\nPressione SPACE para reiniciar"
+                gameOver = true
+            end
         end
     end
 end
 
-function love.keypressed(key) 
+--Mapeando botão clicado
+function love.keypressed(key)
     if key == "space" and gameOver then
         gameOver = false
         timeDifficulty = 0
@@ -76,22 +108,38 @@ function love.keypressed(key)
         ball.speedX = 200
         ball.speedY = 200
     end
+
+    if currentState == "menu" and key == "return" then
+        currentState = "game"
+    
+    elseif currentState == "game" and key == "escape" then
+        currentState = "menu"
+    end
 end
 
 function love.draw()
-    Player1:draw()
-    Player2:draw()
-    ball:draw()
-    timeFormated = string.format("%.2f", timeDifficulty)
+    if currentState == "menu" then
+        love.graphics.draw(bgImage, 0, 0)
+        love.graphics.setFont(love.graphics.newFont(35))
+        love.graphics.printf(text, 0, 250, love.graphics.getWidth(), "center")
 
-    love.graphics.setFont(love.graphics.newFont(15))
-    love.graphics.print("Tempo: " .. timeFormated, 10, 10)
-    love.graphics.print(message, 200, 10)
+    elseif currentState == "game" then
+        love.graphics.draw(backgroundsGame[currentBg], 0, 0)
 
-    love.graphics.setFont(love.graphics.newFont(40))
-    love.graphics.print(score01, 300, 50)
-    love.graphics.print(score02, 500, 50)
+        Player1:draw()
+        Player2:draw()
+        ball:draw()
+        timeFormated = string.format("%.2f", timeDifficulty)
 
-    love.graphics.setFont(love.graphics.newFont(30))
-    love.graphics.printf(winner, 0, 250, love.graphics.getWidth(), "center")
+        love.graphics.setFont(love.graphics.newFont(15))
+        love.graphics.print("Tempo: " .. timeFormated, 10, 10)
+        love.graphics.print(message, 200, 10)
+
+        love.graphics.setFont(love.graphics.newFont(40))
+        love.graphics.print(score01, 300, 50)
+        love.graphics.print(score02, 500, 50)
+
+        love.graphics.setFont(love.graphics.newFont(30))
+        love.graphics.printf(winner, 0, 250, love.graphics.getWidth(), "center")
+    end
 end
